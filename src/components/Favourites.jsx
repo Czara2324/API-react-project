@@ -1,53 +1,59 @@
 import React, { useState, useEffect} from "react";
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
-function Favourites () {
-    const [favourites, setFavourites] = useState(() => {
-        const savedFavourites = localStorage.getItem('favourites');
-        return savedFavourites ? JSON.parse(savedFavourites) : [];
-    });
-    const [breeds, setBreeds] = useState([]);
+function Favourites() {
+    const [favourites, setFavourites] = useState([]);
+    const [images, setImages] = useState({});
+    const navigate = useNavigate();
 
     useEffect(() => {
-        fetch('https://dog.ceo/api/breeds/image/random')
-            .then(response => response.json())
-            .then(data => setBreeds(data))
-            .catch(error => console.error('Error fetching breeds:', error));
-    }, []);
+        const saved = JSON.parse(localStorage.getItem('favourites')) || [];
+        setFavourites(saved);
 
-    const favouriteBreeds = breeds.filter(breed => favourites.includes(breed.id));
+        Promise.all(saved.map(breed =>
+            fetch(`https://dog.ceo/api/breed/${breed}/images/random`)
+              .then(res => res.json())
+              .then(data => ({ breed, image: data.message }))
+          )).then(results => {
+            const imgMap = {};
+            results.forEach(({ breed, image }) => {
+              imgMap[breed] = image;
+            });
+            setImages(imgMap);
+          });
+        }, []);
 
-    const removeFavourite = (breed) => {
-        const updatedFavourites = favourites.filter(favId => favId !== breed.id);
-        setFavourites(updatedFavourites);
-        localStorage.setItem('favourites', JSON.stringify(updatedFavourites));
-    };
-
-    if (favourites.length === 0) {
-        return (
-        <div>
-            <h1>No favourite breeds found.</h1>;
-            <Link to="/">Go back to Home</Link>
-        </div>
-        );
-    }
+        const removeFavourite = (breed) => {
+            const updated = favourites.filter(fav => fav !== breed);
+            setFavourites(updated);
+            localStorage.setItem('favourites', JSON.stringify(updated));
+        
+            const updatedImages = { ...images };
+            delete updatedImages[breed];
+            setImages(updatedImages);
+          };
+        
 
     return (
-        <div>
-            <h1>My Favourite Dog Breeds</h1>
-            <ul>
-                {favouriteBreeds.map(breed => (
-                    <li key={breed.id}>
-                        <Link to={`/breed/${breed.id}`}>
-                            {breed.name}
-                        </Link>
-                        <button onClick={() => removeFavourite(breed.id)}>
-                            Remove from Favourites
-                        </button>
-                    </li>
-                ))}
-            </ul>
-        </div>
+    <div>
+        <h1>Your Favourite Breeds</h1>
+        <button onClick={() => navigate('/')}>← Back to Home</button>
+        {favourites.length === 0 ? (
+        <p>No favourites yet.</p>
+        ) : (
+        <ul>
+            {favourites.map(breed => (
+            <li key={breed}>
+                <img src={images[breed]} alt={breed} width="150" />
+                <p>{breed}</p>
+                <Link to={`/breed/${breed}`}>Details</Link>
+                <button onClick={() => removeFavourite(breed)}>Remove</button>
+            </li>
+            ))}
+        </ul>
+        )}
+    </div>
     );
 }
+
 export default Favourites;

@@ -1,28 +1,46 @@
 import React, { useState, useEffect} from "react";
-import { useParams, Link } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 
 function BreedDetails () {
-    const { id } = useParams();
-    const [breed, setBreed] = (null);
+    const { breedName } = useParams();
+    const [image, setImage] = useState('');
+    const [subBreeds, setSubBreeds] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        fetch(`https://dog.ceo/api/breeds/image/random/${id}`)
-            .then(response => response.json())
-            .then(data => setBreed(breed))
-            .catch(error => console.error('Error fetching breed:', error));
-    }, []);
+        // Fetch breed image
+        fetch(`https://dog.ceo/api/breed/${breedName}/images/random`)
+          .then(res => res.json())
+          .then(data => setImage(data.message));
 
-    if (!breed) {
-        return <div>Loading...</div>;
-    }
+          // Fetch sub-breeds
+        fetch('https://dog.ceo/api/breeds/list/all')
+        .then(res => res.json())
+        .then(data => {
+        const subs = data.message[breedName];
+        if (subs && subs.length > 0) {
+            setSubBreeds(subs);
+        }
+        });
+    }, [breedName]);
 
     return (
         <div>
-            <h1>{breed.name}</h1>
-            <img src={breed.image} alt={breed.name} />
-            <p>{breed.description}</p>
-            <Link to="/">Back to Home</Link>
+          <h1>{breedName.toUpperCase()} Details</h1>
+          <button onClick={() => navigate('/')}>← Back to Home</button>
+          {image && <img src={image} alt={breedName} width="300" />}
+          {subBreeds.length > 0 && (
+            <div>
+              <h3>Sub-breeds:</h3>
+              <ul>
+                {subBreeds.map(sub => (
+                  <li key={sub}>{sub}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
-    );
+      );
 }
+
 export default BreedDetails;
