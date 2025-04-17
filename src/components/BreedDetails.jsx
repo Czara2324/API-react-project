@@ -2,10 +2,9 @@ import React, { useState, useEffect} from "react";
 import { useParams, useNavigate } from 'react-router';
 
 function BreedDetails () {
-    const { breedName } = useParams();
-    const [image, setImage] = useState('');
-    const [subBreeds, setSubBreeds] = useState([]);
-    const navigate = useNavigate();
+    const { breedName } = useParams();//this gets the breed name from the URL
+    const [image, setImage] = useState('');//stores the image of the breed
+    const [subBreeds, setSubBreeds] = useState([]);//stores the sub-breeds of the breed,if any
 
     useEffect(() => {
         // Fetch breed image
@@ -24,6 +23,8 @@ function BreedDetails () {
         });
     }, [breedName]);
 
+    // This page shows the details of a specific breed, including its image and any sub-breeds.
+    // 
     return (
         <div>
           <h1>{breedName.toUpperCase()} Details</h1>

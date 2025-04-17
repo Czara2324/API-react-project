@@ -2,10 +2,12 @@ import React, { useState, useEffect} from "react";
 import { Link, useNavigate } from 'react-router';
 
 function Favourites() {
-    const [favourites, setFavourites] = useState([]);
-    const [images, setImages] = useState({});
+    const [favourites, setFavourites] = useState([]);//stores a list of favourited breeds, pulled from localStorage so the user's picks are remembered
+    const [images, setImages] = useState({});//stores the images of the favourited breeds
     const navigate = useNavigate();
 
+    //When the component mounts, this runs once (because of the empty []).
+    //It fetches the list of favourited breeds from localStorage and then fetches a random image for each breed.
     useEffect(() => {
         const saved = JSON.parse(localStorage.getItem('favourites')) || [];
         setFavourites(saved);
@@ -23,6 +25,7 @@ function Favourites() {
           });
         }, []);
 
+        //This function removes a breed from the favourites list. It updates the state and localStorage accordingly.
         const removeFavourite = (breed) => {
             const updated = favourites.filter(fav => fav !== breed);
             setFavourites(updated);
@@ -33,7 +36,7 @@ function Favourites() {
             setImages(updatedImages);
           };
         
-
+          //This renders the component. It includes a button to go back to the home page, and a list of favourited breeds.
     return (
     <div>
         <h1>Your Favourite Breeds</h1>
